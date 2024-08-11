@@ -1,56 +1,56 @@
+let editor, preview;
+
 document.addEventListener("DOMContentLoaded", () => {
-  const noteContent = document.getElementById("noteContent");
-  const preview = document.getElementById("preview");
-  const editButton = document.getElementById("editButton");
-  const previewButton = document.getElementById("previewButton");
+  initializeEditor();
+  initializePreview();
+});
 
-  function updatePreview() {
-    preview.innerHTML = marked(noteContent.value);
-  }
+function initializeEditor() {
+  const { EditorState, EditorView, basicSetup } =
+    window.electronAPI.getCodeMirror();
+  const { markdown } = window.electronAPI.getMarkdown();
 
-  function showEdit() {
-    noteContent.style.display = "block";
-    preview.style.display = "none";
-    editButton.classList.add("active");
-    previewButton.classList.remove("active");
-  }
-
-  function showPreview() {
-    noteContent.style.display = "none";
-    preview.style.display = "block";
-    editButton.classList.remove("active");
-    previewButton.classList.add("active");
-    updatePreview();
-  }
-
-  editButton.addEventListener("click", showEdit);
-  previewButton.addEventListener("click", showPreview);
-
-  noteContent.addEventListener("input", () => {
-    if (preview.style.display === "block") {
-      updatePreview();
-    }
+  let startState = EditorState.create({
+    doc: "# Welcome to Polynote!\n\nStart typing your markdown here...",
+    extensions: [
+      basicSetup,
+      markdown(),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          updatePreview(update.state.doc.toString());
+        }
+      }),
+    ],
   });
 
-  // Theme handling
-  function setTheme(isDarkMode) {
-    document.documentElement.setAttribute(
-      "data-theme",
-      isDarkMode ? "dark" : "light"
-    );
-  }
-
-  // Listen for theme updates from main process
-  window.electronAPI.onUpdateTheme((isDarkMode) => {
-    setTheme(isDarkMode);
+  editor = new EditorView({
+    state: startState,
+    parent: document.getElementById("editor"),
   });
+}
 
-  // Apply initial theme
-  setTheme(
-    window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
+function initializePreview() {
+  preview = document.getElementById("preview");
+  updatePreview(editor.state.doc.toString());
+}
+
+function updatePreview(markdown) {
+  preview.innerHTML = marked.parse(markdown);
+}
+
+// Theme handling
+window.electronAPI.onUpdateTheme((isDarkMode) => {
+  document.documentElement.setAttribute(
+    "data-theme",
+    isDarkMode ? "dark" : "light"
   );
+  // You would need to implement theme switching for CodeMirror here
+});
 
-  // Initial setup
-  showEdit();
+// Save functionality
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "s") {
+    e.preventDefault();
+    window.electronAPI.saveNote(editor.state.doc.toString());
+  }
 });

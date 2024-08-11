@@ -6,12 +6,6 @@ document
     window.electronAPI.createNewNote();
   });
 
-// Event listener for closing the window
-document.getElementById("closeButton").addEventListener("click", (e) => {
-  console.log("Close button clicked");
-  window.electronAPI.closeWindow();
-});
-
 // Theme handling
 function setTheme(isDarkMode) {
   document.documentElement.setAttribute(

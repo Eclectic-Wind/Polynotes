@@ -5,10 +5,6 @@ console.log("Preload script starting");
 
 // Expose IPC events
 contextBridge.exposeInMainWorld("electronAPI", {
-  closeWindow: () => {
-    console.log("closeWindow called in preload");
-    ipcRenderer.send("close-window");
-  },
   moveWindow: (mouseDelta) => ipcRenderer.send("move-window", mouseDelta),
   onUpdateTheme: (callback) =>
     ipcRenderer.on("update-theme", (event, isDarkMode) => callback(isDarkMode)),

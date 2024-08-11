@@ -17,24 +17,31 @@ class WindowManager {
   createWindow() {
     this.mainWindow = new BrowserWindow({
       width: 400,
-      height: 62,
+      height: 48,
       webPreferences: {
-        preload: path.join(__dirname, "preload.js"),
-        contextIsolation: true,
         nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, "preload.js"),
+        sandbox: false,
       },
       frame: false,
       resizable: true,
       minWidth: 300,
       maxWidth: 750,
-      minHeight: 62,
-      maxHeight: 62,
+      minHeight: 52,
+      maxHeight: 52,
+      transparent: true,
       titleBarStyle: "hidden",
-      trafficLightPosition: { x: 10, y: 10 },
+      vibrancy: "under-window",
+      useContentSize: false,
     });
 
     this.mainWindow.loadFile(path.join(__dirname, "index.html"));
     this.mainWindow.setMenu(null);
+
+    if (process.platform === "darwin") {
+      this.mainWindow.setWindowButtonVisibility(false);
+    }
 
     this.setupContextMenu();
     this.setupIPC();
@@ -70,8 +77,8 @@ class WindowManager {
       x = lastNoteBounds.x + offsetX;
       y = lastNoteBounds.y + offsetY;
     } else {
-      // For the first note, position it closer to the main window
-      x = isRight ? mainBounds.x + mainBounds.width - 720 : mainBounds.x + 20;
+      // For the first note, position it further to the left if on the right side
+      x = isRight ? mainBounds.x + mainBounds.width - 1100 : mainBounds.x + 40;
       y = isBottom ? mainBounds.y - 620 : mainBounds.y + mainBounds.height + 20;
     }
 
@@ -85,12 +92,20 @@ class WindowManager {
       x: x,
       y: y,
       webPreferences: {
-        preload: path.join(__dirname, "preload.js"),
-        contextIsolation: true,
         nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, "preload.js"),
+        sandbox: false,
       },
       parent: this.mainWindow,
       show: false,
+    });
+
+    this.mainWindow.on("will-resize", (event, newBounds) => {
+      if (newBounds.height !== 50) {
+        event.preventDefault();
+        this.mainWindow.setBounds({ ...newBounds, height: 48 });
+      }
     });
 
     noteWindow.loadFile(path.join(__dirname, "notes/note.html"));
@@ -118,10 +133,20 @@ class WindowManager {
         label: "Toggle Theme",
         click: () => this.toggleTheme(),
       },
+      { type: "separator" },
+      {
+        label: "Close Window",
+        click: () => {
+          if (this.mainWindow) {
+            this.mainWindow.close();
+          }
+        },
+      },
     ]);
 
-    this.mainWindow.webContents.on("context-menu", () => {
-      contextMenu.popup({ window: this.mainWindow });
+    this.mainWindow.webContents.on("context-menu", (event, params) => {
+      event.preventDefault();
+      contextMenu.popup({ window: this.mainWindow, x: params.x, y: params.y });
     });
   }
 
@@ -134,13 +159,6 @@ class WindowManager {
         console.log("Main window close method called");
       } else {
         console.log("Main window is null, cannot close");
-      }
-    });
-
-    ipcMain.on("move-window", (event, { mouseX, mouseY }) => {
-      if (this.mainWindow) {
-        const [currentX, currentY] = this.mainWindow.getPosition();
-        this.mainWindow.setPosition(currentX + mouseX, currentY + mouseY);
       }
     });
 

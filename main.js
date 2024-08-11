@@ -1,4 +1,4 @@
-const { app } = require("electron");
+const { app, BrowserWindow } = require("electron");
 const WindowManager = require("./app/windowManager");
 
 let windowManager;
