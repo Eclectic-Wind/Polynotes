@@ -1,9 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// Debug: Log when preload script starts
 console.log("Preload script starting");
 
-// Expose IPC events
 contextBridge.exposeInMainWorld("electronAPI", {
   moveWindow: (mouseDelta) => ipcRenderer.send("move-window", mouseDelta),
   onUpdateTheme: (callback) =>
@@ -11,6 +9,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   requestThemeChange: () => ipcRenderer.send("request-theme-change"),
   createNewNote: () => ipcRenderer.send("create-new-note"),
   debugIPC: (message) => ipcRenderer.send("ipc-debug", message),
+  startDrag: (mousePosition) => ipcRenderer.send("start-drag", mousePosition),
+  drag: (currentMousePosition) =>
+    ipcRenderer.send("drag", currentMousePosition),
+  endDrag: () => ipcRenderer.send("end-drag"),
+  startResize: () => ipcRenderer.send("start-resize"),
+  endResize: () => ipcRenderer.send("end-resize"),
 });
 
 // Debug: Log when API is exposed

@@ -42,3 +42,56 @@ if (searchInput) {
     // For example: window.electronAPI.searchNotes(searchTerm);
   });
 }
+
+// Dragging functionality
+const gripDots = document.getElementById("gripDots");
+let isDragging = false;
+
+gripDots.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  window.electronAPI.startDrag({ x: e.screenX, y: e.screenY });
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (isDragging) {
+    window.electronAPI.drag({ x: e.screenX, y: e.screenY });
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  if (isDragging) {
+    isDragging = false;
+    window.electronAPI.endDrag();
+  }
+});
+
+// Resizing functionality
+const resizeHandle = document.createElement("div");
+resizeHandle.style.position = "absolute";
+resizeHandle.style.right = "0";
+resizeHandle.style.bottom = "0";
+resizeHandle.style.width = "10px";
+resizeHandle.style.height = "10px";
+resizeHandle.style.cursor = "se-resize";
+document.body.appendChild(resizeHandle);
+
+let isResizing = false;
+
+resizeHandle.addEventListener("mousedown", (e) => {
+  isResizing = true;
+  window.electronAPI.startResize();
+  e.preventDefault();
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (isResizing) {
+    // The actual resizing is handled by Electron
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  if (isResizing) {
+    isResizing = false;
+    window.electronAPI.endResize();
+  }
+});

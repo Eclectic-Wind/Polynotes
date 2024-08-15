@@ -152,7 +152,6 @@ body {
   padding-right: 8px;
   padding-left: 10px;
   color: var(--text-primary);
-  -webkit-app-region: drag;
   margin-left: auto;
 }
 

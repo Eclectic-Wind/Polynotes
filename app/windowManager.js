@@ -12,6 +12,15 @@ class WindowManager {
     this.mainWindow = null;
     this.noteWindows = [];
     this.lastNotePosition = { x: 0, y: 0 };
+    this.isDragging = false;
+    this.isResizing = false;
+    this.dragStartPosition = { x: 0, y: 0 };
+    this.dragStartMouseOffset = { x: 0, y: 0 };
+    this.currentSize = { width: 0, height: 0 };
+    this.lastUpdateTime = 0;
+    this.frameInterval = 1;
+    this.lastMousePosition = { x: 0, y: 0 };
+    this.dragInterval = null;
   }
 
   createWindow() {
@@ -28,13 +37,16 @@ class WindowManager {
       resizable: true,
       minWidth: 300,
       maxWidth: 750,
-      minHeight: 52,
-      maxHeight: 52,
+      minHeight: 48,
+      maxHeight: 48,
       transparent: true,
       titleBarStyle: "hidden",
       vibrancy: "under-window",
-      useContentSize: false,
+      useContentSize: true,
     });
+
+    const [width, height] = this.mainWindow.getSize();
+    this.currentSize = { width, height };
 
     this.mainWindow.loadFile(path.join(__dirname, "index.html"));
     this.mainWindow.setMenu(null);
@@ -46,8 +58,8 @@ class WindowManager {
     this.setupContextMenu();
     this.setupIPC();
     this.setupTheme();
+    this.setupResizeListener();
 
-    // Debug: Log when main window is ready
     this.mainWindow.webContents.on("did-finish-load", () => {
       console.log("Main window loaded");
     });
@@ -77,12 +89,10 @@ class WindowManager {
       x = lastNoteBounds.x + offsetX;
       y = lastNoteBounds.y + offsetY;
     } else {
-      // For the first note, position it further to the left if on the right side
       x = isRight ? mainBounds.x + mainBounds.width - 1100 : mainBounds.x + 40;
       y = isBottom ? mainBounds.y - 620 : mainBounds.y + mainBounds.height + 20;
     }
 
-    // Ensure the new window is within screen bounds
     x = Math.max(0, Math.min(x, screenWidth - 700));
     y = Math.max(0, Math.min(y, screenHeight - 600));
 
@@ -99,13 +109,6 @@ class WindowManager {
       },
       parent: this.mainWindow,
       show: false,
-    });
-
-    this.mainWindow.on("will-resize", (event, newBounds) => {
-      if (newBounds.height !== 50) {
-        event.preventDefault();
-        this.mainWindow.setBounds({ ...newBounds, height: 48 });
-      }
     });
 
     noteWindow.loadFile(path.join(__dirname, "notes/note.html"));
@@ -169,7 +172,6 @@ class WindowManager {
 
     ipcMain.on("request-theme-change", () => this.toggleTheme());
 
-    // Debug: Log all IPC events
     ipcMain.on("ipc-debug", (event, message) => {
       console.log("IPC Debug:", message);
     });
@@ -178,6 +180,72 @@ class WindowManager {
       this.contextMenu.popup({
         window: BrowserWindow.fromWebContents(event.sender),
       });
+    });
+
+    ipcMain.on("start-drag", (event, mousePosition) => {
+      if (!this.isDragging && !this.isResizing) {
+        this.isDragging = true;
+        const [windowX, windowY] = this.mainWindow.getPosition();
+        this.dragStartPosition = { x: windowX, y: windowY };
+        this.dragStartMouseOffset = {
+          x: mousePosition.x - windowX,
+          y: mousePosition.y - windowY,
+        };
+        const [width, height] = this.mainWindow.getSize();
+        this.currentSize = { width, height };
+        this.lastMousePosition = mousePosition;
+        this.startDragLoop();
+      }
+    });
+
+    ipcMain.on("drag", (event, currentMousePosition) => {
+      if (this.isDragging) {
+        this.lastMousePosition = currentMousePosition;
+      }
+    });
+
+    ipcMain.on("end-drag", () => {
+      this.isDragging = false;
+      if (this.dragInterval) {
+        clearInterval(this.dragInterval);
+        this.dragInterval = null;
+      }
+    });
+  }
+
+  startDragLoop() {
+    this.dragInterval = setInterval(() => {
+      if (!this.isDragging) {
+        clearInterval(this.dragInterval);
+        this.dragInterval = null;
+        return;
+      }
+
+      const currentTime = Date.now();
+      if (currentTime - this.lastUpdateTime >= this.frameInterval) {
+        const newX = Math.round(
+          this.lastMousePosition.x - this.dragStartMouseOffset.x
+        );
+        const newY = Math.round(
+          this.lastMousePosition.y - this.dragStartMouseOffset.y
+        );
+        this.mainWindow.setBounds({
+          x: newX,
+          y: newY,
+          width: this.currentSize.width,
+          height: this.currentSize.height,
+        });
+        this.lastUpdateTime = currentTime;
+      }
+    }, this.frameInterval);
+  }
+
+  setupResizeListener() {
+    this.mainWindow.on("resize", () => {
+      if (!this.isDragging) {
+        const [width, height] = this.mainWindow.getSize();
+        this.currentSize = { width, height };
+      }
     });
   }
 
