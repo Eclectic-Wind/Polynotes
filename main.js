@@ -1,10 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const WindowManager = require("./app/windowManager");
-const CodeMirror = require("codemirror");
-const { markdown } = require("@codemirror/lang-markdown");
-const { syntaxHighlighting, HighlightStyle } = require("@codemirror/language");
-const { tags } = require("@lezer/highlight");
-const marked = require("marked");
 
 let windowManager;
 

@@ -5,6 +5,15 @@
   --text-secondary: #6d6d6d;
   --border-color: #d6d3c6;
   --accent-color: #d946ef;
+
+  /* Editor specific colors */
+  --editor-bg: var(--bg-primary);
+  --editor-text: #1a1a1a;
+  --editor-cursor: #1a1a1a;
+  --editor-selection: #d1d1d1;
+  --editor-line-number: #999999;
+  --editor-gutter-bg: var(--bg-secondary);
+  --editor-rendered-bg: #f7f7f7;
 }
 
 [data-theme="dark"] {
@@ -13,6 +22,15 @@
   --text-primary: #ffffff;
   --text-secondary: #a0a0a0;
   --border-color: #2a2b30;
+
+  /* Editor specific colors for dark theme */
+  --editor-bg: var(--bg-primary);
+  --editor-text: #abb2bf;
+  --editor-cursor: #528bff;
+  --editor-selection: #3e4451;
+  --editor-line-number: #4b5263;
+  --editor-gutter-bg: var(--bg-secondary);
+  --editor-rendered-bg: #2c313a;
 }
 
 body {
@@ -25,91 +43,20 @@ body {
   color: var(--text-primary);
 }
 
-#note-container {
-  display: flex;
-  height: 100vh;
+/* CodeMirror Editor Styles */
+.CodeMirror {
+  height: calc(100vh - 10px);
+  margin-top: 10px;
+  color: var(--editor-text);
+  background-color: var(--editor-bg);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
+  font-size: 1.2em;
+  line-height: 1.4;
 }
 
-#editor,
-#preview {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-#editor {
+.CodeMirror-gutters {
+  background-color: var(--editor-gutter-bg);
   border-right: 1px solid var(--border-color);
-}
-
-#preview {
-  background-color: var(--bg-secondary);
-}
-
-.cm-editor {
-  height: 100%;
-}
-
-.cm-editor .cm-scroller {
-  font-family: "Fira Code", monospace;
-}
-
-/* Markdown preview styles */
-#preview h1,
-#preview h2,
-#preview h3,
-#preview h4,
-#preview h5,
-#preview h6 {
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-#preview h1 {
-  font-size: 2em;
-}
-#preview h2 {
-  font-size: 1.5em;
-}
-#preview h3 {
-  font-size: 1.25em;
-}
-#preview h4 {
-  font-size: 1em;
-}
-#preview h5 {
-  font-size: 0.875em;
-}
-#preview h6 {
-  font-size: 0.85em;
-}
-
-#preview p,
-#preview blockquote,
-#preview ul,
-#preview ol,
-#preview dl,
-#preview table,
-#preview pre {
-  margin-top: 0;
-  margin-bottom: 16px;
-}
-
-#preview code {
-  padding: 0.2em 0.4em;
-  margin: 0;
-  font-size: 85%;
-  background-color: rgba(27, 31, 35, 0.05);
-  border-radius: 3px;
-}
-
-#preview pre code {
-  padding: 0;
-  margin: 0;
-  font-size: 100%;
-  word-break: normal;
-  white-space: pre;
-  background: transparent;
-  border: 0;
 }

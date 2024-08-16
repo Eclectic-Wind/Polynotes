@@ -43,12 +43,31 @@ if (searchInput) {
   });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  document.body.classList.add("glow");
+  setTimeout(() => {
+    document.body.classList.remove("glow");
+  }, 1000);
+});
+
 // Dragging functionality
 const gripDots = document.getElementById("gripDots");
 let isDragging = false;
 
+// Add cursor styles for grip dots
+gripDots.addEventListener("mouseenter", () => {
+  gripDots.style.cursor = "grab";
+});
+
+gripDots.addEventListener("mouseleave", () => {
+  if (!isDragging) {
+    gripDots.style.cursor = "default";
+  }
+});
+
 gripDots.addEventListener("mousedown", (e) => {
   isDragging = true;
+  gripDots.style.cursor = "grabbing";
   window.electronAPI.startDrag({ x: e.screenX, y: e.screenY });
 });
 
@@ -61,6 +80,7 @@ document.addEventListener("mousemove", (e) => {
 document.addEventListener("mouseup", () => {
   if (isDragging) {
     isDragging = false;
+    gripDots.style.cursor = "grab";
     window.electronAPI.endDrag();
   }
 });

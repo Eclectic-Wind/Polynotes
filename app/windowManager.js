@@ -24,9 +24,20 @@ class WindowManager {
   }
 
   createWindow() {
+    const { screen } = require("electron");
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenWidth, height: screenHeight } =
+      primaryDisplay.workAreaSize;
+
+    const windowWidth = 400;
+    const windowHeight = 48;
+    const padding = 280;
+
     this.mainWindow = new BrowserWindow({
-      width: 400,
-      height: 48,
+      width: windowWidth,
+      height: windowHeight,
+      x: padding,
+      y: screenHeight - windowHeight - padding,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -47,8 +58,6 @@ class WindowManager {
 
     const [width, height] = this.mainWindow.getSize();
     this.currentSize = { width, height };
-
-    this.mainWindow.webContents.openDevTools({ mode: "detach" });
 
     this.mainWindow.loadFile(path.join(__dirname, "index.html"));
     this.mainWindow.setMenu(null);
@@ -91,7 +100,7 @@ class WindowManager {
       x = lastNoteBounds.x + offsetX;
       y = lastNoteBounds.y + offsetY;
     } else {
-      x = isRight ? mainBounds.x + mainBounds.width - 1100 : mainBounds.x + 40;
+      x = isRight ? mainBounds.x + mainBounds.width - 1100 : mainBounds.x + 250;
       y = isBottom ? mainBounds.y - 620 : mainBounds.y + mainBounds.height + 20;
     }
 
