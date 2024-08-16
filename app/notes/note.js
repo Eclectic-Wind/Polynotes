@@ -1,24 +1,44 @@
-let editor, preview;
+let editor;
+const {
+  EditorState,
+  EditorView,
+  basicSetup,
+  markdown,
+  syntaxHighlighting,
+  HighlightStyle,
+  tags,
+} = window.electronAPI.getCodeMirror();
+const marked = window.electronAPI.getMarked();
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeEditor();
-  initializePreview();
 });
 
 function initializeEditor() {
-  const { EditorState, EditorView, basicSetup } =
-    window.electronAPI.getCodeMirror();
-  const { markdown } = window.electronAPI.getMarkdown();
+  const highlightStyle = HighlightStyle.define([
+    { tag: tags.heading1, fontSize: "1.6em", fontWeight: "bold" },
+    { tag: tags.heading2, fontSize: "1.4em", fontWeight: "bold" },
+    { tag: tags.heading3, fontSize: "1.2em", fontWeight: "bold" },
+    { tag: tags.heading4, fontSize: "1.1em", fontWeight: "bold" },
+    { tag: tags.heading5, fontSize: "1.05em", fontWeight: "bold" },
+    { tag: tags.heading6, fontSize: "1em", fontWeight: "bold" },
+    { tag: tags.emphasis, fontStyle: "italic" },
+    { tag: tags.strong, fontWeight: "bold" },
+  ]);
 
-  let startState = EditorState.create({
+  const startState = EditorState.create({
     doc: "# Welcome to Polynote!\n\nStart typing your markdown here...",
     extensions: [
       basicSetup,
       markdown(),
+      syntaxHighlighting(highlightStyle),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
-          updatePreview(update.state.doc.toString());
+          renderMarkdown(update.state);
         }
+      }),
+      EditorView.domEventHandlers({
+        mousedown: (event, view) => handleLineClick(event, view),
       }),
     ],
   });
@@ -29,13 +49,46 @@ function initializeEditor() {
   });
 }
 
-function initializePreview() {
-  preview = document.getElementById("preview");
-  updatePreview(editor.state.doc.toString());
+function renderMarkdown(state) {
+  const doc = state.doc;
+  const lines = doc.toString().split("\n");
+  const renderedLines = lines.map((line, index) => {
+    const from = doc.line(index + 1).from;
+    const to = doc.line(index + 1).to;
+    return {
+      original: line,
+      rendered: marked.parseInline(line),
+      from,
+      to,
+    };
+  });
+
+  editor.dispatch({
+    effects: EditorView.decorations.of(
+      renderedLines.flatMap((line) =>
+        line.original.trim() && line.original !== line.rendered
+          ? [
+              EditorView.replace({
+                from: line.from,
+                to: line.to,
+                insert: document.createTextNode(line.rendered),
+              }),
+            ]
+          : []
+      )
+    ),
+  });
 }
 
-function updatePreview(markdown) {
-  preview.innerHTML = marked.parse(markdown);
+function handleLineClick(event, view) {
+  const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+  if (pos) {
+    const line = view.state.doc.lineAt(pos);
+    view.dispatch({
+      changes: { from: line.from, to: line.to, insert: line.text },
+      selection: { anchor: line.from, head: line.to },
+    });
+  }
 }
 
 // Theme handling
@@ -44,7 +97,6 @@ window.electronAPI.onUpdateTheme((isDarkMode) => {
     "data-theme",
     isDarkMode ? "dark" : "light"
   );
-  // You would need to implement theme switching for CodeMirror here
 });
 
 // Save functionality

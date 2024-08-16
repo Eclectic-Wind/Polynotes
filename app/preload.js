@@ -5,7 +5,7 @@ console.log("Preload script starting");
 contextBridge.exposeInMainWorld("electronAPI", {
   moveWindow: (mouseDelta) => ipcRenderer.send("move-window", mouseDelta),
   onUpdateTheme: (callback) =>
-    ipcRenderer.on("update-theme", (event, isDarkMode) => callback(isDarkMode)),
+    ipcRenderer.on("update-theme", (_, isDarkMode) => callback(isDarkMode)),
   requestThemeChange: () => ipcRenderer.send("request-theme-change"),
   createNewNote: () => ipcRenderer.send("create-new-note"),
   debugIPC: (message) => ipcRenderer.send("ipc-debug", message),
@@ -15,9 +15,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   endDrag: () => ipcRenderer.send("end-drag"),
   startResize: () => ipcRenderer.send("start-resize"),
   endResize: () => ipcRenderer.send("end-resize"),
+  getCodeMirror: () => ipcRenderer.invoke("get-codemirror"),
+  getMarked: () => ipcRenderer.invoke("get-marked"),
+  saveNote: (content) => ipcRenderer.invoke("save-note", content),
 });
 
-// Debug: Log when API is exposed
 console.log("electronAPI exposed to renderer");
 
 window.addEventListener("DOMContentLoaded", () => {

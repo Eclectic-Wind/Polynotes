@@ -1,5 +1,10 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const WindowManager = require("./app/windowManager");
+const CodeMirror = require("codemirror");
+const { markdown } = require("@codemirror/lang-markdown");
+const { syntaxHighlighting, HighlightStyle } = require("@codemirror/language");
+const { tags } = require("@lezer/highlight");
+const marked = require("marked");
 
 let windowManager;
 
@@ -10,6 +15,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  setupIPCHandlers();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -19,3 +25,27 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+function setupIPCHandlers() {
+  ipcMain.handle("get-codemirror", () => {
+    return {
+      EditorState: CodeMirror.EditorState,
+      EditorView: CodeMirror.EditorView,
+      basicSetup: CodeMirror.basicSetup,
+      markdown: markdown,
+      syntaxHighlighting: syntaxHighlighting,
+      HighlightStyle: HighlightStyle,
+      tags: tags,
+    };
+  });
+
+  ipcMain.handle("get-marked", () => {
+    return marked;
+  });
+
+  ipcMain.handle("save-note", (event, content) => {
+    // Implement note saving logic here
+    console.log("Saving note:", content);
+    return true; // Return true if save was successful
+  });
+}

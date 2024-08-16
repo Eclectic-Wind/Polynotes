@@ -48,6 +48,8 @@ class WindowManager {
     const [width, height] = this.mainWindow.getSize();
     this.currentSize = { width, height };
 
+    this.mainWindow.webContents.openDevTools({ mode: "detach" });
+
     this.mainWindow.loadFile(path.join(__dirname, "index.html"));
     this.mainWindow.setMenu(null);
 
