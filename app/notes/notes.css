@@ -5,14 +5,8 @@
   --text-secondary: #6d6d6d;
   --border-color: #d6d3c6;
   --accent-color: #d946ef;
-
-  /* Editor specific colors */
-  --editor-bg: var(--bg-primary);
-  --editor-text: #1a1a1a;
-  --editor-cursor: #1a1a1a;
   --editor-selection: #d1d1d1;
   --editor-line-number: #999999;
-  --editor-gutter-bg: var(--bg-secondary);
   --editor-rendered-bg: #f7f7f7;
 }
 
@@ -22,41 +16,173 @@
   --text-primary: #ffffff;
   --text-secondary: #a0a0a0;
   --border-color: #2a2b30;
-
-  /* Editor specific colors for dark theme */
-  --editor-bg: var(--bg-primary);
-  --editor-text: #abb2bf;
-  --editor-cursor: #528bff;
   --editor-selection: #3e4451;
   --editor-line-number: #4b5263;
-  --editor-gutter-bg: var(--bg-secondary);
   --editor-rendered-bg: #2c313a;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
 
-/* CodeMirror Editor Styles */
 .CodeMirror {
   height: calc(100vh - 10px);
   margin-top: 10px;
-  color: var(--editor-text);
-  background-color: var(--editor-bg);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol";
-  font-size: 1.2em;
+    Helvetica, Arial, sans-serif;
+  font-size: 16px;
   line-height: 1.4;
 }
 
 .CodeMirror-gutters {
-  background-color: var(--editor-gutter-bg);
-  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  border-right: 0;
+}
+
+.CodeMirror-linenumber {
+  color: var(--editor-line-number);
+  padding: 0 3px 0 5px;
+  min-width: 20px;
+  text-align: right;
+  white-space: nowrap;
+  margin-right: 10px;
+}
+
+.CodeMirror-cursor {
+  border-left: 2px solid var(--text-primary);
+}
+
+.CodeMirror-linewidget {
+  overflow: hidden;
+  line-height: 1;
+}
+
+.CodeMirror-linewidget p,
+.CodeMirror-linewidget h1,
+.CodeMirror-linewidget h2,
+.CodeMirror-linewidget h3,
+.CodeMirror-linewidget h4,
+.CodeMirror-linewidget h5,
+.CodeMirror-linewidget h6,
+.CodeMirror-linewidget ul,
+.CodeMirror-linewidget ol {
+  margin: 0.4em 0;
+}
+
+.CodeMirror-linewidget h1,
+.CodeMirror-linewidget h2,
+.CodeMirror-linewidget h3,
+.CodeMirror-linewidget h4,
+.CodeMirror-linewidget h5,
+.CodeMirror-linewidget h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.CodeMirror-linewidget h1 {
+  font-size: 1.8em;
+}
+.CodeMirror-linewidget h2 {
+  font-size: 1.5em;
+}
+.CodeMirror-linewidget h3 {
+  font-size: 1.3em;
+}
+.CodeMirror-linewidget h4 {
+  font-size: 1.1em;
+}
+.CodeMirror-linewidget h5 {
+  font-size: 1em;
+}
+.CodeMirror-linewidget h6 {
+  font-size: 0.9em;
+}
+
+.CodeMirror-linewidget ul,
+.CodeMirror-linewidget ol {
+  padding-left: 1.5em;
+}
+
+.CodeMirror-linewidget code {
+  font-family: "Fira Code", Consolas, Monaco, "Andale Mono", "Ubuntu Mono",
+    monospace;
+  font-size: 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+[data-theme="dark"] .CodeMirror-linewidget code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.CodeMirror-scroll {
+  padding-bottom: 30px;
+}
+
+.CodeMirror-sizer {
+  margin-bottom: 0 !important;
+}
+
+.CodeMirror-gutter-wrapper {
+  position: absolute;
+  z-index: 4;
+  background: none !important;
+  border: none !important;
+}
+
+.CodeMirror .header-1,
+.cm-header-1 {
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.CodeMirror .header-2,
+.cm-header-2 {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.CodeMirror .header-3,
+.cm-header-3 {
+  font-size: 1.6em;
+  font-weight: bold;
+}
+
+.CodeMirror .header-4,
+.cm-header-4 {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.CodeMirror .header-5,
+.cm-header-5 {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.CodeMirror .header-6,
+.cm-header-6 {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.CodeMirror .editing-line.header-1,
+.CodeMirror .editing-line.header-2,
+.CodeMirror .editing-line.header-3,
+.CodeMirror .editing-line.header-4,
+.CodeMirror .editing-line.header-5,
+.CodeMirror .editing-line.header-6 {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+.cm-header-1 {
+  margin-top: 5px;
 }
