@@ -38,16 +38,25 @@ if (searchInput) {
   searchInput.addEventListener("input", (e) => {
     const searchTerm = e.target.value;
     console.log("Search term:", searchTerm);
-    // Implement search functionality here
-    // For example: window.electronAPI.searchNotes(searchTerm);
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+// handle the glow effect
+function applyGlowEffect() {
   document.body.classList.add("glow");
   setTimeout(() => {
     document.body.classList.remove("glow");
-  }, 1000);
+  }, 2000);
+}
+
+// Listen for a custom event from the main process
+window.electronAPI.onWindowMove(() => {
+  applyGlowEffect();
+});
+
+// The existing DOMContentLoaded event listener can stay as is
+document.addEventListener("DOMContentLoaded", () => {
+  applyGlowEffect();
 });
 
 // Dragging functionality

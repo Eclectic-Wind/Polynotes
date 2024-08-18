@@ -71,6 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return el;
   }
 
+  // Add context menu event listener
+  editor.getWrapperElement().addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    window.electronAPI.showNoteContextMenu();
+  });
+
   // Theme handling
   function setTheme(isDarkMode) {
     document.documentElement.setAttribute(

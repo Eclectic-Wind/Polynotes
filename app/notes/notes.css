@@ -1,3 +1,4 @@
+/* Color Schemes */
 :root {
   --bg-primary: #fffdf7;
   --bg-secondary: #f7f5ed;
@@ -21,6 +22,7 @@
   --editor-rendered-bg: #2c313a;
 }
 
+/* Global Styles */
 body {
   margin: 0;
   padding: 0;
@@ -28,8 +30,10 @@ body {
     Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* CodeMirror Styles */
 .CodeMirror {
   height: calc(100vh - 10px);
   margin-top: 10px;
@@ -39,11 +43,13 @@ body {
     Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 1.4;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .CodeMirror-gutters {
   background-color: var(--bg-secondary);
   border-right: 0;
+  transition: background-color 0.2s ease;
 }
 
 .CodeMirror-linenumber {
@@ -53,12 +59,15 @@ body {
   text-align: right;
   white-space: nowrap;
   margin-right: 10px;
+  transition: color 0.2s ease;
 }
 
 .CodeMirror-cursor {
   border-left: 2px solid var(--text-primary);
+  transition: border-color 0.2s ease;
 }
 
+/* CodeMirror Widget Styles */
 .CodeMirror-linewidget {
   overflow: hidden;
   line-height: 1;
@@ -116,12 +125,14 @@ body {
   font-size: 15px;
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 3px;
+  transition: background-color 0.2s ease;
 }
 
 [data-theme="dark"] .CodeMirror-linewidget code {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* CodeMirror Scroll and Sizer */
 .CodeMirror-scroll {
   padding-bottom: 30px;
 }
@@ -137,6 +148,7 @@ body {
   border: none !important;
 }
 
+/* Header Styles */
 .CodeMirror .header-1,
 .cm-header-1 {
   font-size: 2em;
