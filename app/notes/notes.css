@@ -6,9 +6,21 @@
   --text-secondary: #6d6d6d;
   --border-color: #d6d3c6;
   --accent-color: #d946ef;
+  --accent-color-light: #e78ff2;
   --editor-selection: #d1d1d1;
   --editor-line-number: #999999;
   --editor-rendered-bg: #f7f7f7;
+  --blockquote-border: #e0e0e0;
+  --code-bg: #f0f0f0;
+  --keyword-color: #d73a49;
+  --variable-color: #e36209;
+  --type-color: #6f42c1;
+  --comment-color: #6a737d;
+  --string-color: #032f62;
+  --number-color: #005cc5;
+  --property-color: #005cc5;
+  --operator-color: #d73a49;
+  --builtin-color: #6f42c1;
 }
 
 [data-theme="dark"] {
@@ -17,38 +29,79 @@
   --text-primary: #ffffff;
   --text-secondary: #a0a0a0;
   --border-color: #2a2b30;
+  --accent-color: #d946ef;
+  --accent-color-light: #e78ff2;
   --editor-selection: #3e4451;
   --editor-line-number: #4b5263;
   --editor-rendered-bg: #2c313a;
+  --blockquote-border: #4a4a4a;
+  --code-bg: #2a2b30;
+  --keyword-color: #ff7b72;
+  --variable-color: #ffa657;
+  --type-color: #d2a8ff;
+  --comment-color: #8b949e;
+  --string-color: #a5d6ff;
+  --number-color: #79c0ff;
+  --property-color: #79c0ff;
+  --operator-color: #ff7b72;
+  --builtin-color: #d2a8ff;
 }
 
 /* Global Styles */
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
+  line-height: 1.6;
+}
+
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  padding-bottom: 0.5em;
+  padding-left: 0.2em;
+  margin: 0;
+  line-height: 1.2;
+  display: inline-block;
+}
+
+h1::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: var(--text-secondary);
+  margin-top: 0.2em;
 }
 
 /* CodeMirror Styles */
 .CodeMirror {
-  height: calc(100vh - 10px);
-  margin-top: 10px;
+  height: calc(100vh - 20px);
+  margin-top: 20px;
   color: var(--text-primary);
   background-color: var(--bg-primary);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.6;
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .CodeMirror-gutters {
   background-color: var(--bg-secondary);
-  border-right: 0;
+  border-right: 1px solid var(--border-color);
   transition: background-color 0.2s ease;
 }
 
@@ -58,7 +111,6 @@ body {
   min-width: 20px;
   text-align: right;
   white-space: nowrap;
-  margin-right: 10px;
   transition: color 0.2s ease;
 }
 
@@ -70,7 +122,7 @@ body {
 /* CodeMirror Widget Styles */
 .CodeMirror-linewidget {
   overflow: hidden;
-  line-height: 1;
+  line-height: 1.6;
 }
 
 .CodeMirror-linewidget p,
@@ -82,7 +134,7 @@ body {
 .CodeMirror-linewidget h6,
 .CodeMirror-linewidget ul,
 .CodeMirror-linewidget ol {
-  margin: 0.4em 0;
+  margin: 0.8em 0;
 }
 
 .CodeMirror-linewidget h1,
@@ -96,22 +148,22 @@ body {
 }
 
 .CodeMirror-linewidget h1 {
-  font-size: 1.8em;
+  font-size: 2em;
 }
 .CodeMirror-linewidget h2 {
-  font-size: 1.5em;
+  font-size: 1.8em;
 }
 .CodeMirror-linewidget h3 {
-  font-size: 1.3em;
+  font-size: 1.6em;
 }
 .CodeMirror-linewidget h4 {
-  font-size: 1.1em;
+  font-size: 1.4em;
 }
 .CodeMirror-linewidget h5 {
-  font-size: 1em;
+  font-size: 1.2em;
 }
 .CodeMirror-linewidget h6 {
-  font-size: 0.9em;
+  font-size: 1.1em;
 }
 
 .CodeMirror-linewidget ul,
@@ -122,14 +174,11 @@ body {
 .CodeMirror-linewidget code {
   font-family: "Fira Code", Consolas, Monaco, "Andale Mono", "Ubuntu Mono",
     monospace;
-  font-size: 15px;
-  background-color: rgba(0, 0, 0, 0.05);
+  font-size: 0.9em;
+  background-color: var(--bg-secondary);
   border-radius: 3px;
+  padding: 0.2em 0.4em;
   transition: background-color 0.2s ease;
-}
-
-[data-theme="dark"] .CodeMirror-linewidget code {
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* CodeMirror Scroll and Sizer */
@@ -148,41 +197,192 @@ body {
   border: none !important;
 }
 
-/* Header Styles */
+/* Comprehensive CodeMirror Stylings */
+.cm-s-default .cm-header {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+.cm-s-default .cm-quote {
+  color: var(--text-secondary);
+}
+.cm-s-default .cm-keyword {
+  color: var(--keyword-color);
+}
+.cm-s-default .cm-atom {
+  color: var(--keyword-color);
+}
+.cm-s-default .cm-number {
+  color: var(--number-color);
+}
+.cm-s-default .cm-def {
+  color: var(--text-primary);
+}
+.cm-s-default .cm-variable {
+  color: var(--variable-color);
+}
+.cm-s-default .cm-variable-2 {
+  color: var(--variable-color);
+}
+.cm-s-default .cm-variable-3 {
+  color: var(--variable-color);
+}
+.cm-s-default .cm-property {
+  color: var(--property-color);
+}
+.cm-s-default .cm-operator {
+  color: var(--operator-color);
+}
+.cm-s-default .cm-comment {
+  color: var(--comment-color);
+  font-style: italic;
+}
+.cm-s-default .cm-string {
+  color: var(--string-color);
+}
+.cm-s-default .cm-string-2 {
+  color: var(--string-color);
+}
+.cm-s-default .cm-meta {
+  color: var(--text-secondary);
+}
+.cm-s-default .cm-qualifier {
+  color: var(--text-secondary);
+}
+.cm-s-default .cm-builtin {
+  color: var(--builtin-color);
+}
+.cm-s-default .cm-bracket {
+  color: var(--text-primary);
+}
+.cm-s-default .cm-tag {
+  color: var(--keyword-color);
+}
+.cm-s-default .cm-attribute {
+  color: var(--variable-color);
+}
+.cm-s-default .cm-hr {
+  color: var(--text-secondary);
+}
+.cm-s-default .cm-link {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.cm-s-default .cm-error {
+  color: #f00;
+}
+.cm-invalidchar {
+  color: #f00;
+}
+
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-bracket {
+  color: var(--text-primary);
+}
+
+/* Specific header styles */
+.cm-s-default .cm-header-1 {
+  font-size: 2em;
+}
+.cm-s-default .cm-header-2 {
+  font-size: 1.8em;
+}
+.cm-s-default .cm-header-3 {
+  font-size: 1.6em;
+}
+.cm-s-default .cm-header-4 {
+  font-size: 1.4em;
+}
+.cm-s-default .cm-header-5 {
+  font-size: 1.2em;
+}
+.cm-s-default .cm-header-6 {
+  font-size: 1.1em;
+}
+
+/* Additional styles for improved readability */
+.cm-s-default .cm-strong {
+  font-weight: bold;
+}
+.cm-s-default .cm-em {
+  font-style: italic;
+}
+
+/* Code block styling */
+.cm-s-default .cm-code,
+.cm-s-default .cm-code-block {
+  background-color: var(--code-bg);
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-family: "Fira Code", Consolas, Monaco, "Andale Mono", "Ubuntu Mono",
+    monospace;
+}
+
+/* List styles */
+.cm-s-default .cm-list1,
+.cm-s-default .cm-list2,
+.cm-s-default .cm-list3 {
+  color: var(--text-primary);
+}
+
+/* Table styles */
+.cm-s-default .cm-table {
+  color: var(--text-primary);
+}
+
+/* Horizontal rule style */
+.cm-s-default .cm-hr {
+  color: var(--border-color);
+}
+
+/* Image and URL styles */
+.cm-s-default .cm-url,
+.cm-s-default .cm-image {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+/* Math expression style */
+.cm-s-default .cm-math {
+  color: var(--type-color);
+  font-style: italic;
+}
+
+/* Highlight style */
+.cm-s-default .cm-highlight {
+  background-color: rgba(255, 255, 0, 0.2);
+  padding: 2px 0;
+}
+
+/* Strikethrough style */
+.cm-s-default .cm-strikethrough {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
 .CodeMirror .header-1,
 .cm-header-1 {
   font-size: 2em;
-  font-weight: bold;
 }
-
 .CodeMirror .header-2,
 .cm-header-2 {
   font-size: 1.8em;
-  font-weight: bold;
 }
-
 .CodeMirror .header-3,
 .cm-header-3 {
   font-size: 1.6em;
-  font-weight: bold;
 }
-
 .CodeMirror .header-4,
 .cm-header-4 {
   font-size: 1.4em;
-  font-weight: bold;
 }
-
 .CodeMirror .header-5,
 .cm-header-5 {
   font-size: 1.2em;
-  font-weight: bold;
 }
-
 .CodeMirror .header-6,
 .cm-header-6 {
   font-size: 1.1em;
-  font-weight: bold;
 }
 
 .CodeMirror .editing-line.header-1,
@@ -195,6 +395,101 @@ body {
     Helvetica, Arial, sans-serif;
 }
 
-.cm-header-1 {
-  margin-top: 5px;
+/* Blockquote Styles */
+blockquote {
+  margin: 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--blockquote-border);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  line-height: 1;
+}
+
+.CodeMirror-linewidget blockquote,
+.cm-quote {
+  margin: 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--blockquote-border);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Consecutive Blockquote Styles */
+.consecutive-blockquote {
+  border-left: 3px solid var(--blockquote-border);
+  padding-left: 1em;
+  margin: 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.consecutive-blockquote + .consecutive-blockquote {
+  margin-top: 0;
+  border-top: none;
+}
+
+.blockquote-container {
+  margin: 0.8em 0;
+}
+
+.blockquote-container + .blockquote-container {
+  margin-top: 1.6em;
+}
+
+.CodeMirror-linewidget blockquote,
+.cm-quote {
+  margin: 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--blockquote-border);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.blockquote-container blockquote {
+  margin: 0;
+}
+
+.consecutive-blockquote {
+  border-left: 3px solid var(--blockquote-border);
+  padding-left: 1em;
+  margin: 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.consecutive-blockquote.level-2 {
+  margin-left: 1em;
+  border-left-color: var(--accent-color);
+}
+
+.consecutive-blockquote.level-3 {
+  margin-left: 2em;
+  border-left-color: var(--accent-color-light);
+}
+
+/* Add more levels if needed */
+/* Link Styles */
+.CodeMirror-linewidget a,
+.cm-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.CodeMirror-linewidget a:hover,
+.cm-link:hover {
+  color: var(--accent-color-light);
+  text-decoration: underline;
+}
+
+/* Selection Styles */
+.CodeMirror-selected {
+  background: var(--editor-selection);
+}
+.CodeMirror-focused .CodeMirror-selected {
+  background: var(--editor-selection);
 }

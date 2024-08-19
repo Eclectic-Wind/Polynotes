@@ -1,29 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Polynote</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polynotes</title>
+
+    <!-- CodeMirror -->
     <link
       rel="stylesheet"
       href="../../node_modules/codemirror/lib/codemirror.css"
     />
     <script src="../../node_modules/codemirror/lib/codemirror.js"></script>
-    <script src="../../node_modules/codemirror/mode/markdown/markdown.js"></script>
-    <script src="../../node_modules/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="notes.css" />
-  </head>
-  <body>
-    <div id="editor"></div>
-    <script src="note.js"></script>
-    <!-- CodeMirror core -->
-    <script src="../../node_modules/codemirror/lib/codemirror.js"></script>
+
     <!-- CodeMirror addons -->
     <script src="../../node_modules/codemirror/addon/mode/overlay.js"></script>
     <script src="../../node_modules/codemirror/mode/markdown/markdown.js"></script>
     <script src="../../node_modules/codemirror/addon/edit/continuelist.js"></script>
     <script src="../../node_modules/codemirror/addon/display/autorefresh.js"></script>
+
     <!-- Marked library -->
     <script src="../../node_modules/marked/marked.min.js"></script>
+
+    <!-- Highlight.js -->
+    <link
+      rel="stylesheet"
+      href="../../node_modules/highlight.js/styles/default.css"
+    />
+    <script src="../../node_modules/highlight.js/highlight.min.js"></script>
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="../../node_modules/katex/dist/katex.min.css" />
+    <script src="../../node_modules/katex/dist/katex.min.js"></script>
+
+    <!-- Your custom styles -->
+    <link rel="stylesheet" href="notes.css" />
+  </head>
+  <body>
+    <div id="editor"></div>
 
     <!-- Your custom scripts -->
     <script src="note.js"></script>
