@@ -1,201 +1,288 @@
-let editor;
-let renderedRanges = [];
-
 document.addEventListener("DOMContentLoaded", () => {
-  editor = CodeMirror(document.getElementById("editor"), {
-    lineNumbers: true,
+  const editor = initializeCodeMirror();
+  const renderManager = new RenderManager(editor);
+  const inputHandler = new InputHandler(editor);
+  const themeManager = new ThemeManager(editor);
+
+  setupEventListeners(editor, renderManager, inputHandler, themeManager);
+});
+
+function initializeCodeMirror() {
+  return CodeMirror(document.getElementById("editor"), {
     mode: "markdown",
-    theme: "default",
+    lineNumbers: true,
     lineWrapping: true,
-    styleActiveLine: false,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    indentUnit: 2,
+    tabSize: 2,
+    indentWithTabs: true,
+    theme: "default",
   });
+}
 
-  editor.on("change", (cm, change) => {
-    if (
-      change.origin === "+input" &&
-      change.text.length === 2 &&
-      change.text[0] === "" &&
-      change.text[1] === ""
-    ) {
-      // This condition checks if the change was caused by pressing Enter
-      renderChangedLines(cm, change.from.line);
-    }
-  });
-
-  editor.on("cursorActivity", (cm) => {
-    const cursor = cm.getCursor();
-    unrenderAtPosition(cm, cursor);
-  });
-
-  editor.getWrapperElement().addEventListener("click", (event) => {
-    const pos = editor.coordsChar({ left: event.clientX, top: event.clientY });
-    unrenderAtPosition(editor, pos);
-  });
-
-  function renderChangedLines(cm, line) {
-    const blockRange = findBlockRange(cm, line);
-    renderRange(cm, blockRange.from, blockRange.to);
+class RenderManager {
+  constructor(editor) {
+    this.editor = editor;
   }
 
-  function renderRange(cm, startLine, endLine) {
-    const content = cm.getRange(
-      { line: startLine, ch: 0 },
-      { line: endLine, ch: cm.getLine(endLine).length }
+  renderInlineMarkdown(text) {
+    const markdownRules = [
+      {
+        pattern: /(\*\*\*|___)(.*?)\1/g,
+        replacement: "<strong><em>$2</em></strong>",
+      },
+      { pattern: /(\*\*|__)(.*?)\1/g, replacement: "<strong>$2</strong>" },
+      { pattern: /(\*|_)(.*?)\1/g, replacement: "<em>$2</em>" },
+      { pattern: /~~(.*?)~~/g, replacement: "<del>$1</del>" },
+      { pattern: /`([^`\n]+)`/g, replacement: "<code>$1</code>" },
+      { pattern: /\[(.*?)\]\((.*?)\)/g, replacement: '<a href="$2">$1</a>' },
+    ];
+
+    return markdownRules.reduce(
+      (result, rule) => result.replace(rule.pattern, rule.replacement),
+      text
     );
-    const renderedHTML = marked.parse(content);
-    if (renderedHTML.trim() !== content.trim()) {
-      const element = createRenderedElement(renderedHTML);
-      replaceRange(cm, startLine, endLine, element);
-      renderedRanges.push({ from: startLine, to: endLine });
-    }
   }
 
-  function findBlockRange(cm, startLine) {
-    const endLine = cm.lastLine();
-    let currentLine = startLine;
-
-    // Function to check if a line is empty or only contains whitespace
-    const isEmptyLine = (line) => cm.getLine(line).trim() === "";
-
-    // Function to count '>' characters at the start of a line
-    const countBlockquoteMarkers = (line) => {
-      const lineContent = cm.getLine(line);
-      let count = 0;
-      while (count < lineContent.length && lineContent[count] === ">") {
-        count++;
-      }
-      return count;
-    };
-
-    // Check for block quote
-    const startMarkers = countBlockquoteMarkers(startLine);
-    if (startMarkers > 0) {
-      // Look backwards
-      while (currentLine > 0) {
-        const prevMarkers = countBlockquoteMarkers(currentLine - 1);
-        if (prevMarkers === 0 && !isEmptyLine(currentLine - 1)) {
-          break;
-        }
-        currentLine--;
-      }
-      const fromLine = currentLine;
-
-      // Look forwards
-      currentLine = startLine;
-      while (currentLine <= endLine) {
-        const currentMarkers = countBlockquoteMarkers(currentLine);
-        if (currentMarkers === 0 && !isEmptyLine(currentLine)) {
-          // Check for consecutive blockquotes
-          let nextNonEmptyLine = currentLine + 1;
-          while (nextNonEmptyLine <= endLine && isEmptyLine(nextNonEmptyLine)) {
-            nextNonEmptyLine++;
-          }
-          if (
-            nextNonEmptyLine <= endLine &&
-            countBlockquoteMarkers(nextNonEmptyLine) > 0
-          ) {
-            currentLine = nextNonEmptyLine;
-            continue;
-          }
-          break;
-        }
-        currentLine++;
-      }
-      return { from: fromLine, to: currentLine - 1 };
-    }
-
-    // Check for list
-    if (/^(\s*[-*+]|\s*\d+\.)/.test(cm.getLine(startLine))) {
-      while (
-        currentLine > 0 &&
-        (/^(\s*[-*+]|\s*\d+\.)/.test(cm.getLine(currentLine - 1)) ||
-          isEmptyLine(currentLine - 1))
-      ) {
-        currentLine--;
-      }
-      const fromLine = currentLine;
-      currentLine = startLine;
-      while (
-        currentLine <= endLine &&
-        (/^(\s*[-*+]|\s*\d+\.)/.test(cm.getLine(currentLine)) ||
-          isEmptyLine(currentLine))
-      ) {
-        currentLine++;
-      }
-      return { from: fromLine, to: currentLine - 1 };
-    }
-
-    // Check for code block
-    if (cm.getLine(startLine).trim().startsWith("```")) {
-      while (
-        currentLine > 0 &&
-        !cm
-          .getLine(currentLine - 1)
-          .trim()
-          .startsWith("```")
-      ) {
-        currentLine--;
-      }
-      const fromLine = currentLine;
-      currentLine = startLine;
-      while (currentLine <= endLine) {
-        if (
-          currentLine !== fromLine &&
-          cm.getLine(currentLine).trim() === "```"
-        ) {
-          return { from: fromLine, to: currentLine };
-        }
-        currentLine++;
-      }
-    }
-
-    // Default to single line
-    return { from: startLine, to: startLine };
-  }
-
-  function replaceRange(cm, fromLine, toLine, element) {
-    const fromPos = { line: fromLine, ch: 0 };
-    const toPos = { line: toLine, ch: cm.getLine(toLine).length };
-    cm.markText(fromPos, toPos, {
-      replacedWith: element,
-      handleMouseEvents: true,
-    });
-  }
-
-  function createRenderedElement(html) {
-    const el = document.createElement("div");
-    el.innerHTML = html;
-    el.style.display = "inline-block";
-    el.style.width = "100%";
+  createRenderedElement(text) {
+    const el = document.createElement("span");
+    el.className = this.getMarkdownClasses(text).join(" ");
+    el.innerHTML = this.renderInlineMarkdown(text);
+    el.setAttribute("data-original", text);
     return el;
   }
 
-  // Add context menu event listener
+  getMarkdownClasses(text) {
+    const classRules = [
+      { pattern: /^\*\*\*.*\*\*\*$/, classes: ["cm-strong", "cm-em"] },
+      { pattern: /^\*\*.*\*\*$/, classes: ["cm-strong"] },
+      { pattern: /^\*.*\*$/, classes: ["cm-em"] },
+      { pattern: /^~~.*~~$/, classes: ["cm-strikethrough"] },
+      { pattern: /^`.*`$/, classes: ["cm-code"] },
+      { pattern: /^\[.*\]\(.*\)$/, classes: ["cm-link"] },
+    ];
+
+    return classRules.reduce(
+      (classes, rule) =>
+        rule.pattern.test(text) ? [...classes, ...rule.classes] : classes,
+      []
+    );
+  }
+
+  findMarkdownTokens(text) {
+    const regex =
+      /(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|~~.*?~~|`.*?`|\[.*?\]\(.*?\))/g;
+    const tokens = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      tokens.push({
+        text: match[0],
+        index: match.index,
+        length: match[0].length,
+      });
+    }
+    return tokens;
+  }
+
+  handleCursorActivity(mark) {
+    const cursor = this.editor.getCursor();
+    const markPos = mark.find();
+
+    if (
+      markPos &&
+      cursor.line === markPos.from.line &&
+      cursor.line === markPos.to.line
+    ) {
+      if (cursor.ch >= markPos.from.ch && cursor.ch <= markPos.to.ch) {
+        mark.clear();
+      }
+    }
+  }
+
+  renderSyntax(token) {
+    const from = this.editor.posFromIndex(token.index);
+    const to = this.editor.posFromIndex(token.index + token.length);
+    const element = this.createRenderedElement(token.text);
+
+    const mark = this.editor.markText(from, to, {
+      replacedWith: element,
+      handleMouseEvents: true,
+      inclusiveLeft: false,
+      inclusiveRight: false,
+      atomic: false,
+    });
+
+    this.editor.on("cursorActivity", () => this.handleCursorActivity(mark));
+  }
+
+  updateRendering() {
+    const content = this.editor.getValue();
+    const tokens = this.findMarkdownTokens(content);
+    const cursor = this.editor.getCursor();
+
+    this.editor.operation(() => {
+      this.editor.getAllMarks().forEach((mark) => mark.clear());
+
+      tokens.forEach((token) => {
+        const tokenStart = this.editor.posFromIndex(token.index);
+        const tokenEnd = this.editor.posFromIndex(token.index + token.length);
+
+        if (this.isCursorOutsideToken(cursor, tokenStart, tokenEnd)) {
+          this.renderSyntax(token);
+        }
+      });
+    });
+  }
+
+  isCursorOutsideToken(cursor, tokenStart, tokenEnd) {
+    return (
+      cursor.line < tokenStart.line ||
+      cursor.line > tokenEnd.line ||
+      (cursor.line === tokenStart.line && cursor.ch < tokenStart.ch) ||
+      (cursor.line === tokenEnd.line && cursor.ch > tokenEnd.ch)
+    );
+  }
+}
+
+class InputHandler {
+  constructor(editor) {
+    this.editor = editor;
+    this.specialCharTimeout = null;
+  }
+
+  handleInputRead(change) {
+    const cursor = this.editor.getCursor();
+    const line = this.editor.getLine(cursor.line);
+    const beforeCursor = line.slice(0, cursor.ch);
+
+    if (["*", "_", "~", "`"].includes(change.text[0])) {
+      this.handleSpecialChar(change.text[0], cursor, beforeCursor);
+    } else if (change.text[0] && change.text[0] !== " ") {
+      this.handleRegularChar(cursor, beforeCursor, line);
+    }
+  }
+
+  handleSpecialChar(char, cursor, beforeCursor) {
+    clearTimeout(this.specialCharTimeout);
+
+    if (char === "~") {
+      this.handleTilde(cursor, beforeCursor);
+    } else {
+      this.handleOtherSpecialChars(char, cursor, beforeCursor);
+    }
+  }
+
+  handleTilde(cursor, beforeCursor) {
+    if (beforeCursor.endsWith("~~")) {
+      this.specialCharTimeout = setTimeout(() => {
+        const currentLine = this.editor.getLine(cursor.line);
+        if (!currentLine.slice(cursor.ch).startsWith("~")) {
+          this.editor.replaceRange("~~", cursor);
+          this.editor.setCursor({ line: cursor.line, ch: cursor.ch });
+        }
+      }, 1);
+    }
+  }
+
+  handleOtherSpecialChars(char, cursor, beforeCursor) {
+    const doubleChar = char.repeat(2);
+
+    if (beforeCursor.endsWith(doubleChar)) {
+      this.editor.replaceRange(char, cursor);
+      this.editor.setCursor({ line: cursor.line, ch: cursor.ch });
+    } else if (beforeCursor.endsWith(char)) {
+      this.specialCharTimeout = setTimeout(() => {
+        if (this.editor.getLine(cursor.line).slice(cursor.ch).startsWith(char))
+          return;
+        this.editor.replaceRange(char, cursor);
+        this.editor.setCursor({ line: cursor.line, ch: cursor.ch });
+      }, 1);
+    } else {
+      this.specialCharTimeout = setTimeout(() => {
+        const currentLine = this.editor.getLine(cursor.line);
+        const afterChar = currentLine.slice(cursor.ch);
+        if (!afterChar.startsWith(char) && !/^\s*$/.test(afterChar)) {
+          this.editor.replaceRange(char, cursor);
+          this.editor.setCursor({ line: cursor.line, ch: cursor.ch });
+        }
+      }, 1);
+    }
+  }
+
+  handleRegularChar(cursor, beforeCursor, line) {
+    if (
+      beforeCursor.endsWith("~~") &&
+      !line.slice(cursor.ch).startsWith("~~")
+    ) {
+      this.editor.replaceRange("~~", { line: cursor.line, ch: cursor.ch });
+      this.editor.setCursor({ line: cursor.line, ch: cursor.ch });
+    } else if (this.isSingleSpecialChar(beforeCursor)) {
+      clearTimeout(this.specialCharTimeout);
+      const lastChar = beforeCursor.slice(-1);
+      this.editor.replaceRange(lastChar, cursor);
+      this.editor.setCursor({ line: cursor.line, ch: cursor.ch + 1 });
+    }
+  }
+
+  isSingleSpecialChar(beforeCursor) {
+    return (
+      (beforeCursor.endsWith("*") ||
+        beforeCursor.endsWith("_") ||
+        beforeCursor.endsWith("`") ||
+        beforeCursor.endsWith("~")) &&
+      !beforeCursor.endsWith("**") &&
+      !beforeCursor.endsWith("__") &&
+      !beforeCursor.endsWith("``") &&
+      !beforeCursor.endsWith("~~") &&
+      !beforeCursor.endsWith("***") &&
+      !beforeCursor.endsWith("___")
+    );
+  }
+}
+
+class ThemeManager {
+  constructor(editor) {
+    this.editor = editor;
+  }
+
+  setTheme(isDarkMode) {
+    document.documentElement.setAttribute(
+      "data-theme",
+      isDarkMode ? "dark" : "light"
+    );
+    this.editor.setOption("theme", isDarkMode ? "darcula" : "default");
+  }
+
+  applyInitialTheme() {
+    this.setTheme(
+      window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+  }
+}
+
+function setupEventListeners(
+  editor,
+  renderManager,
+  inputHandler,
+  themeManager
+) {
+  editor.on("change", () => renderManager.updateRendering());
+  editor.on("inputRead", (cm, change) => inputHandler.handleInputRead(change));
+  editor.on("cursorActivity", () => renderManager.updateRendering());
+  editor.on("blur", () => renderManager.updateRendering());
+  editor.on("focus", () => renderManager.updateRendering());
+
   editor.getWrapperElement().addEventListener("contextmenu", (event) => {
     event.preventDefault();
     window.electronAPI.showNoteContextMenu();
   });
 
-  // Theme handling
-  function setTheme(isDarkMode) {
-    document.documentElement.setAttribute(
-      "data-theme",
-      isDarkMode ? "dark" : "light"
-    );
-    editor.setOption("theme", isDarkMode ? "darcula" : "default");
-  }
-
-  // Listen for theme updates from main process
-  window.electronAPI.onUpdateTheme((isDarkMode) => {
-    setTheme(isDarkMode);
-  });
-
-  // Apply initial theme
-  setTheme(
-    window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
+  window.electronAPI.onUpdateTheme((isDarkMode) =>
+    themeManager.setTheme(isDarkMode)
   );
 
-  // Initial render
-  renderRange(editor, 0, editor.lastLine());
-});
+  themeManager.applyInitialTheme();
+  renderManager.updateRendering();
+}
