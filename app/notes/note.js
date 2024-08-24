@@ -1,3 +1,5 @@
+import { MarkdownRenderer } from "./markdownRender.js";
+
 // Constants
 const PAIRING_RULES = [
   { opener: "*", closer: "*", type: "emphasis" },
@@ -5,47 +7,6 @@ const PAIRING_RULES = [
   { opener: "~", closer: "~", type: "strikethrough" },
   { opener: "`", closer: "`", type: "code" },
 ];
-
-const MARKDOWN_PATTERNS = [
-  {
-    pattern: /(\*\*\*|___)(.*?)\1/g,
-    replacement: "<strong><em>$2</em></strong>",
-  },
-  { pattern: /(\*\*|__)(.*?)\1/g, replacement: "<strong>$2</strong>" },
-  { pattern: /(\*|_)(.*?)\1/g, replacement: "<em>$2</em>" },
-  { pattern: /~~(.*?)~~/g, replacement: "<del>$1</del>" },
-  { pattern: /`([^`\n]+)`/g, replacement: "<code>$1</code>" },
-  { pattern: /\[(.*?)\]\((.*?)\)/g, replacement: '<a href="$2">$1</a>' },
-];
-
-// Helper functions
-const renderInlineMarkdown = (text) =>
-  MARKDOWN_PATTERNS.reduce(
-    (acc, { pattern, replacement }) => acc.replace(pattern, replacement),
-    text
-  );
-
-const createRenderedElement = (text) => {
-  const el = document.createElement("span");
-  el.innerHTML = renderInlineMarkdown(text);
-  el.setAttribute("data-original", text);
-  return el;
-};
-
-const findMarkdownTokens = (text) => {
-  const regex =
-    /(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|~~.*?~~|`.*?`|\[.*?\]\(.*?\))/g;
-  const tokens = [];
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    tokens.push({
-      text: match[0],
-      index: match.index,
-      length: match[0].length,
-    });
-  }
-  return tokens;
-};
 
 // Classes
 class AutoPairSyntaxHandler {
@@ -152,67 +113,6 @@ class AutoPairSyntaxHandler {
   }
 }
 
-class MarkdownRenderer {
-  constructor(editor) {
-    this.editor = editor;
-  }
-
-  renderSyntax(token) {
-    const from = this.editor.posFromIndex(token.index);
-    const to = this.editor.posFromIndex(token.index + token.length);
-
-    const element = createRenderedElement(token.text);
-
-    const mark = this.editor.markText(from, to, {
-      replacedWith: element,
-      handleMouseEvents: true,
-      inclusiveLeft: false,
-      inclusiveRight: false,
-      atomic: false,
-    });
-
-    this.editor.on("cursorActivity", () => this.handleCursorActivity(mark));
-  }
-
-  handleCursorActivity(mark) {
-    const cursor = this.editor.getCursor();
-    const markPos = mark.find();
-
-    if (
-      markPos &&
-      cursor.line === markPos.from.line &&
-      cursor.ch >= markPos.from.ch &&
-      cursor.ch <= markPos.to.ch
-    ) {
-      mark.clear();
-    }
-  }
-
-  updateRendering() {
-    const content = this.editor.getValue();
-    const tokens = findMarkdownTokens(content);
-    const cursor = this.editor.getCursor();
-
-    this.editor.operation(() => {
-      this.editor.getAllMarks().forEach((mark) => mark.clear());
-
-      tokens.forEach((token) => {
-        const tokenStart = this.editor.posFromIndex(token.index);
-        const tokenEnd = this.editor.posFromIndex(token.index + token.length);
-
-        if (
-          cursor.line < tokenStart.line ||
-          cursor.line > tokenEnd.line ||
-          (cursor.line === tokenStart.line && cursor.ch < tokenStart.ch) ||
-          (cursor.line === tokenEnd.line && cursor.ch > tokenEnd.ch)
-        ) {
-          this.renderSyntax(token);
-        }
-      });
-    });
-  }
-}
-
 class ThemeManager {
   constructor(editor) {
     this.editor = editor;
@@ -247,60 +147,6 @@ class ThemeManager {
     }
   }
 }
-
-// Main function
-document.addEventListener("DOMContentLoaded", function () {
-  const editor = CodeMirror(document.getElementById("editor"), {
-    mode: "polynotes-custom",
-    lineNumbers: true,
-    theme: "default",
-    lineWrapping: true,
-    autofocus: true,
-    autoCloseBrackets: true,
-    matchBrackets: true,
-    indentUnit: 4,
-    tabSize: 4,
-    indentWithTabs: false,
-    extraKeys: {
-      Enter: "newlineAndIndentContinueMarkdownList",
-      "Ctrl-B": (cm) => toggleInlineFormatting(cm, "**"),
-      "Ctrl-I": (cm) => toggleInlineFormatting(cm, "*"),
-      "Ctrl-K": (cm) => toggleInlineFormatting(cm, "[", "](url)"),
-      "Ctrl-Q": (cm) => toggleBlockFormatting(cm, "> "),
-      "Ctrl-L": (cm) => toggleBlockFormatting(cm, "- "),
-      "Ctrl-Alt-L": toggleOrderedList,
-      "Ctrl-1": (cm) => toggleBlockFormatting(cm, "# "),
-      "Ctrl-2": (cm) => toggleBlockFormatting(cm, "## "),
-      "Ctrl-3": (cm) => toggleBlockFormatting(cm, "### "),
-      "Ctrl-4": (cm) => toggleBlockFormatting(cm, "#### "),
-      "Ctrl-5": (cm) => toggleBlockFormatting(cm, "##### "),
-      "Ctrl-6": (cm) => toggleBlockFormatting(cm, "###### "),
-      "Ctrl-/": (cm) => cm.toggleComment(),
-      "Shift-Ctrl-C": (cm) => toggleInlineFormatting(cm, "```\n", "\n```"),
-      "Ctrl-Space": "autocomplete",
-    },
-  });
-
-  const autoPairHandler = new AutoPairSyntaxHandler(editor, PAIRING_RULES);
-  editor.on("inputRead", (cm, change) =>
-    autoPairHandler.handleInputRead(change)
-  );
-
-  const markdownRenderer = new MarkdownRenderer(editor);
-
-  editor.on("change", () => markdownRenderer.updateRendering());
-  editor.on("cursorActivity", () => markdownRenderer.updateRendering());
-  editor.on("blur", () => markdownRenderer.updateRendering());
-  editor.on("focus", () => markdownRenderer.updateRendering());
-
-  // Initialize ThemeManager
-  const themeManager = new ThemeManager(editor);
-  themeManager.applyInitialTheme();
-  themeManager.setupEventListeners();
-
-  // Initial rendering
-  markdownRenderer.updateRendering();
-});
 
 // Helper functions for formatting
 function toggleInlineFormatting(cm, marker, endMarker = marker) {
@@ -381,3 +227,65 @@ function toggleOrderedList(cm) {
     }
   }
 }
+
+// Main function
+document.addEventListener("DOMContentLoaded", function () {
+  const editor = CodeMirror(document.getElementById("editor"), {
+    mode: "polynotes-custom",
+    lineNumbers: true,
+    theme: "default",
+    lineWrapping: true,
+    autofocus: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    extraKeys: {
+      Enter: "newlineAndIndentContinueMarkdownList",
+      "Ctrl-B": (cm) => toggleInlineFormatting(cm, "**"),
+      "Ctrl-I": (cm) => toggleInlineFormatting(cm, "*"),
+      "Ctrl-K": (cm) => toggleInlineFormatting(cm, "[", "](url)"),
+      "Ctrl-Q": (cm) => toggleBlockFormatting(cm, "> "),
+      "Ctrl-L": (cm) => toggleBlockFormatting(cm, "- "),
+      "Ctrl-Alt-L": toggleOrderedList,
+      "Ctrl-1": (cm) => toggleBlockFormatting(cm, "# "),
+      "Ctrl-2": (cm) => toggleBlockFormatting(cm, "## "),
+      "Ctrl-3": (cm) => toggleBlockFormatting(cm, "### "),
+      "Ctrl-4": (cm) => toggleBlockFormatting(cm, "#### "),
+      "Ctrl-5": (cm) => toggleBlockFormatting(cm, "##### "),
+      "Ctrl-6": (cm) => toggleBlockFormatting(cm, "###### "),
+      "Ctrl-/": (cm) => cm.toggleComment(),
+      "Shift-Ctrl-C": (cm) => toggleInlineFormatting(cm, "```\n", "\n```"),
+      "Ctrl-Space": "autocomplete",
+    },
+  });
+
+  // Add context menu setup
+  editor.getWrapperElement().addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (window.electronAPI && window.electronAPI.showNoteContextMenu) {
+      window.electronAPI.showNoteContextMenu();
+    }
+  });
+
+  const autoPairHandler = new AutoPairSyntaxHandler(editor, PAIRING_RULES);
+  editor.on("inputRead", (cm, change) =>
+    autoPairHandler.handleInputRead(change)
+  );
+
+  const markdownRenderer = new MarkdownRenderer(editor);
+
+  editor.on("change", () => markdownRenderer.updateRendering());
+  editor.on("cursorActivity", () => markdownRenderer.updateRendering());
+  editor.on("blur", () => markdownRenderer.updateRendering());
+  editor.on("focus", () => markdownRenderer.updateRendering());
+
+  // Initialize ThemeManager
+  const themeManager = new ThemeManager(editor);
+  themeManager.applyInitialTheme();
+  themeManager.setupEventListeners();
+
+  // Initial rendering
+  markdownRenderer.updateRendering();
+});

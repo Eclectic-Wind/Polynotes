@@ -9,6 +9,12 @@ const MARKDOWN_PATTERNS = [
   { pattern: /~~(.*?)~~/g, replacement: "<del>$1</del>" },
   { pattern: /`([^`\n]+)`/g, replacement: "<code>$1</code>" },
   { pattern: /\[(.*?)\]\((.*?)\)/g, replacement: '<a href="$2">$1</a>' },
+  // Add header patterns
+  {
+    pattern: /^(#{1,6})\s(.*)$/gm,
+    replacement: (_, hashes, content) =>
+      `<h${hashes.length}>${content}</h${hashes.length}>`,
+  },
 ];
 
 // Helper functions
@@ -27,7 +33,7 @@ const createRenderedElement = (text) => {
 
 const findMarkdownTokens = (text) => {
   const regex =
-    /(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|~~.*?~~|`.*?`|\[.*?\]\(.*?\))/g;
+    /(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|^#{1,6}\s.*$)/gm;
   const tokens = [];
   let match;
   while ((match = regex.exec(text)) !== null) {

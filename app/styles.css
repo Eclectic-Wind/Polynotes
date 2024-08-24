@@ -33,6 +33,7 @@ body {
   width: 100vw;
   overflow: hidden;
   border: 2px solid var(--accent-color-dark);
+  border-bottom: 3px solid var(--accent-color-dark);
   transition: background-color 0.2s ease, color 0.2s ease, border 2s ease;
 }
 

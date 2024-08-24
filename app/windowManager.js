@@ -190,7 +190,6 @@ class WindowManager {
         preload: path.join(__dirname, "preload.js"),
         sandbox: false,
       },
-      parent: this.mainWindow,
       show: false,
       frame: true,
       hasShadow: true,

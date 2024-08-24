@@ -23,11 +23,12 @@
           table: false,
           tableRow: 0,
           tableAlign: false,
-          bottomRowSeen: false, // New state to track if we've seen a bottom row
+          bottomRowSeen: false,
+          header: 0,
         };
       },
       token: function (stream, state) {
-        // Reset table state at the start of each line if it's empty or not a table row
+        // Reset states at the start of each line
         if (stream.sol()) {
           if (stream.eol() || !stream.match(/^\s*\|/, false)) {
             state.table = false;
@@ -35,11 +36,21 @@
             state.tableAlign = false;
             state.bottomRowSeen = false;
           }
+          state.header = 0; // Reset header state
         }
 
         // Check for headers at the start of the line
-        if (stream.sol() && stream.match(/^#{1,6}\s+/)) {
-          return "header";
+        if (stream.sol() && stream.match(/^(#{1,6})\s+/)) {
+          state.header = stream.current().trim().length; // Set header level
+          return "header header-" + state.header;
+        }
+
+        // If we're in a header, consume the rest of the line as a header
+        if (state.header > 0) {
+          stream.skipToEnd();
+          var headerClass = "header header-" + state.header;
+          state.header = 0; // Reset header state
+          return headerClass;
         }
 
         // Check for blockquotes
@@ -146,8 +157,14 @@
           return "italic";
         }
 
-        if (stream.match("~~~~")) {
-          state.strikethrough = !state.strikethrough;
+        // Updated strikethrough handling
+        if (stream.match(/~~(?=\S)/)) {
+          state.strikethrough = true;
+          return "strikethrough";
+        }
+
+        if (state.strikethrough && stream.match(/(?<=\S)~~/)) {
+          state.strikethrough = false;
           return "strikethrough";
         }
 
