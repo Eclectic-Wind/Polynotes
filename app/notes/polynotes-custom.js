@@ -158,13 +158,8 @@
         }
 
         // Updated strikethrough handling
-        if (stream.match(/~~(?=\S)/)) {
-          state.strikethrough = true;
-          return "strikethrough";
-        }
-
-        if (state.strikethrough && stream.match(/(?<=\S)~~/)) {
-          state.strikethrough = false;
+        if (stream.match("~~")) {
+          state.strikethrough = !state.strikethrough;
           return "strikethrough";
         }
 

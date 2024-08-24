@@ -1,14 +1,16 @@
 // Constants
 const MARKDOWN_PATTERNS = [
   {
-    pattern: /(\*\*\*|___)(.*?)\1/g,
+    pattern: /(\*\*\*)(.*?)\1/g,
     replacement: "<strong><em>$2</em></strong>",
   },
-  { pattern: /(\*\*|__)(.*?)\1/g, replacement: "<strong>$2</strong>" },
-  { pattern: /(\*|_)(.*?)\1/g, replacement: "<em>$2</em>" },
-  { pattern: /~~(.*?)~~/g, replacement: "<del>$1</del>" },
-  { pattern: /`([^`\n]+)`/g, replacement: "<code>$1</code>" },
-  { pattern: /\[(.*?)\]\((.*?)\)/g, replacement: '<a href="$2">$1</a>' },
+  { pattern: /(\*\*)(.*?)\1/g, replacement: "<strong>$2</strong>" },
+  { pattern: /(\*)(.*?)\1/g, replacement: "<em>$2</em>" },
+  { pattern: /(~~)(.*?)\1/g, replacement: "<del>$2</del>" },
+  { pattern: /(__)(.*?)\1/g, replacement: "<u>$2</u>" },
+  { pattern: /(___)(.*?)\1/g, replacement: "<u><em>$2</em></u>" },
+  { pattern: /(`)(.*?)\1/g, replacement: "<code>$2</code>" },
+  { pattern: /(\[)(.*?)\]\((.*?)\)/g, replacement: '<a href="$3">$2</a>' },
   // Add header patterns
   {
     pattern: /^(#{1,6})\s(.*)$/gm,
@@ -33,7 +35,7 @@ const createRenderedElement = (text) => {
 
 const findMarkdownTokens = (text) => {
   const regex =
-    /(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|~~.*?~~|`.*?`|\[.*?\]\(.*?\)|^#{1,6}\s.*$)/gm;
+    /(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|___.*?___|\~\~.*?\~\~|__.*?__|_.*?_|`.*?`|\[.*?\]\(.*?\)|^#{1,6}\s.*$|\|(?:(?:[^|\n]*\|)+)\n\|(?:(?::?-+:?\|)+)\n(?:\|(?:(?:[^|\n]*\|)+)\n?)+)/gm;
   const tokens = [];
   let match;
   while ((match = regex.exec(text)) !== null) {
@@ -46,6 +48,51 @@ const findMarkdownTokens = (text) => {
   return tokens;
 };
 
+const renderTable = (tableText) => {
+  const rows = tableText.trim().split("\n");
+  const headerRow = rows[0]
+    .slice(1, -1)
+    .split("|")
+    .map((cell) => cell.trim());
+  const alignments = rows[1]
+    .slice(1, -1)
+    .split("|")
+    .map((cell) => {
+      if (cell.trim().startsWith(":") && cell.trim().endsWith(":"))
+        return "center";
+      if (cell.trim().startsWith(":")) return "left";
+      if (cell.trim().endsWith(":")) return "right";
+      return "";
+    });
+
+  let html = "<table>\n";
+  html += "  <thead>\n";
+  html += "    <tr>\n";
+  headerRow.forEach((cell, i) => {
+    const align = alignments[i] ? ` align="${alignments[i]}"` : "";
+    html += `      <th${align}>${cell}</th>\n`;
+  });
+  html += "    </tr>\n";
+  html += "  </thead>\n";
+
+  html += "  <tbody>\n";
+  rows.slice(2).forEach((row) => {
+    html += "    <tr>\n";
+    row
+      .slice(1, -1)
+      .split("|")
+      .forEach((cell, i) => {
+        const align = alignments[i] ? ` align="${alignments[i]}"` : "";
+        html += `      <td${align}>${cell.trim()}</td>\n`;
+      });
+    html += "    </tr>\n";
+  });
+  html += "  </tbody>\n";
+  html += "</table>";
+
+  return html;
+};
+
 class MarkdownRenderer {
   constructor(editor) {
     this.editor = editor;
@@ -55,7 +102,15 @@ class MarkdownRenderer {
     const from = this.editor.posFromIndex(token.index);
     const to = this.editor.posFromIndex(token.index + token.length);
 
-    const element = createRenderedElement(token.text);
+    let element;
+    if (token.text.startsWith("|")) {
+      const html = renderTable(token.text);
+      element = document.createElement("div");
+      element.innerHTML = html;
+    } else {
+      element = createRenderedElement(token.text);
+    }
+    element.setAttribute("data-original", token.text);
 
     const mark = this.editor.markText(from, to, {
       replacedWith: element,
@@ -74,11 +129,28 @@ class MarkdownRenderer {
 
     if (
       markPos &&
-      cursor.line === markPos.from.line &&
-      cursor.ch >= markPos.from.ch &&
-      cursor.ch <= markPos.to.ch
+      cursor.line >= markPos.from.line &&
+      cursor.line <= markPos.to.line
     ) {
+      const line = this.editor.getLine(cursor.line);
+      const cursorOffset = this.editor.indexFromPos(cursor);
+      const markOffset = this.editor.indexFromPos(markPos.from);
+      const relativeOffset = cursorOffset - markOffset;
+
       mark.clear();
+
+      if (cursor.line === markPos.from.line) {
+        this.editor.setCursor(
+          this.editor.posFromIndex(markOffset + relativeOffset)
+        );
+      } else if (cursor.line === markPos.to.line) {
+        const markLength = markPos.to.ch - markPos.from.ch;
+        this.editor.setCursor(
+          this.editor.posFromIndex(
+            markOffset + Math.min(relativeOffset, markLength)
+          )
+        );
+      }
     }
   }
 

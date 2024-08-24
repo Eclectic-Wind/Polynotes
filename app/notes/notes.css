@@ -79,6 +79,10 @@ h6 {
   font-size: 1em;
 }
 
+table {
+  margin-left: 5em;
+}
+
 /* Polynotes Editor Styles */
 .cm-s-default .cm-string,
 .cm-s-default .cm-keyword,
@@ -252,6 +256,7 @@ pre.CodeMirror-line {
 .cm-table-middle {
   border: 1px solid var(--bg-table);
   margin: 10px;
+  margin-left: 0px;
   padding: 5px;
   font-family: monospace;
 }
