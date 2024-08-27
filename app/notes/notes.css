@@ -81,9 +81,21 @@ h6 {
 
 table {
   margin-left: 5em;
+  border-collapse: collapse;
+  width: calc(100% - 10em);
 }
 
-/* Polynotes Editor Styles */
+th,
+td {
+  border: 1px solid var(--text-primary);
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  font-weight: bold;
+}
+
 .cm-s-default .cm-string,
 .cm-s-default .cm-keyword,
 .cm-s-default .cm-variable,
@@ -107,92 +119,58 @@ table {
   color: var(--text-primary) !important;
 }
 
-/* Base styles for all headers */
 .cm-header {
   font-weight: bold;
   color: var(--text-primary) !important;
-
   line-height: 1.2;
+  margin: 0;
 }
 
-/* Specific styles for each header level */
 .cm-header-1 {
   font-size: 2.2em;
-  color: var(--text-primary) !important;
 }
-
 .cm-header-2 {
   font-size: 2em;
-  color: var(--text-primary) !important;
 }
-
 .cm-header-3 {
   font-size: 1.8em;
-  color: var(--text-primary) !important;
 }
-
 .cm-header-4 {
   font-size: 1.5em;
-  color: var(--text-primary) !important;
 }
-
 .cm-header-5 {
   font-size: 1.25em;
-  color: var(--text-primary);
 }
-
 .cm-header-6 {
   font-size: 1em;
-  color: var(--text-primary);
 }
 
-/* Spacing fixes for CodeMirror structure */
-.CodeMirror-line {
-  margin: 0;
-  padding: 0;
-}
-
+.CodeMirror-line,
 pre.CodeMirror-line {
   margin: 0;
   padding: 0;
 }
 
-/* Apply padding to the CodeMirror-lines container */
-.CodeMirror-lines {
-  padding: 4px 0;
-}
-
-/* Apply margins and padding to the parent of CodeMirror-line */
-.CodeMirror-code > div {
-  margin: 0;
-  padding-bottom: 0em;
-}
-
+/* CodeMirror header styles */
 .CodeMirror-code > div:has(.cm-header-1) {
   padding-bottom: 1.2em;
 }
-
 .CodeMirror-code > div:has(.cm-header-2) {
   padding-bottom: 1em;
 }
-
 .CodeMirror-code > div:has(.cm-header-3) {
   padding-bottom: 0.8em;
 }
-
 .CodeMirror-code > div:has(.cm-header-4) {
   padding-bottom: 0.6em;
 }
-
 .CodeMirror-code > div:has(.cm-header-5) {
   padding-bottom: 0.4em;
 }
-
 .CodeMirror-code > div:has(.cm-header-6) {
   padding-bottom: 0.2em;
 }
 
-/* Ensure proper cursor alignment */
 .CodeMirror-cursor {
   border-left: 2px solid var(--text-primary);
   transition: border-color 0.2s ease;
@@ -206,11 +184,9 @@ pre.CodeMirror-line {
 .cm-list {
   color: var(--text-primary);
 }
-
 .cm-list.cm-task {
   color: var(--accent-color);
 }
-
 .cm-hr {
   border-bottom: 1px solid var(--border-color);
 }
@@ -229,52 +205,22 @@ pre.CodeMirror-line {
 .cm-image {
   color: var(--accent-color);
 }
-
 .cm-table-align {
   color: var(--text-secondary);
 }
-
 .cm-bold {
   font-weight: bold;
 }
-
 .cm-italic {
   font-style: italic;
 }
-
 .cm-underline {
   text-decoration: underline;
 }
-
 .cm-strikethrough {
   text-decoration: line-through;
 }
 
-.cm-table-single,
-.cm-table-top,
-.cm-table-bottom,
-.cm-table-middle {
-  border: 1px solid var(--bg-table);
-  margin: 10px;
-  margin-left: 0px;
-  padding: 5px;
-  font-family: monospace;
-}
-
-.cm-table-top {
-  border-bottom: none;
-}
-
-.cm-table-bottom {
-  border-top: none;
-}
-
-.cm-table-middle {
-  border-top: none;
-  border-bottom: none;
-}
-
-/* CodeMirror Styles */
 .CodeMirror {
   height: calc(100vh - 20px);
   margin-top: 0px;
@@ -283,7 +229,7 @@ pre.CodeMirror-line {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
   font-size: 16px;
-  line-height: 1.2;
+  line-height: 1.6;
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
@@ -302,7 +248,10 @@ pre.CodeMirror-line {
   transition: color 0.2s ease;
 }
 
-.CodeMirror-cursor {
-  border-left: 2px solid var(--text-primary);
-  transition: border-color 0.2s ease;
+.CodeMirror-sizer {
+  min-height: 0 !important;
+}
+
+.CodeMirror pre.CodeMirror-line span[role="presentation"] {
+  vertical-align: top;
 }

@@ -136,35 +136,44 @@
           return getTableClass(stream, state);
         }
 
-        if (stream.match("***") || stream.match("___")) {
+        if (stream.match("***")) {
           state.italic = !state.italic;
           state.bold = !state.bold;
-          return state.italic && state.bold ? "italic bold" : "";
+          return null;
+        }
+
+        if (stream.match("___")) {
+          state.italic = !state.italic;
+          state.underline = !state.underline;
+          return null;
         }
 
         if (stream.match("**")) {
           state.bold = !state.bold;
-          return "bold";
+          return null;
         }
 
         if (stream.match("__")) {
           state.underline = !state.underline;
-          return "underline";
+          return null;
         }
 
         if (stream.match("*") || stream.match("_")) {
           state.italic = !state.italic;
-          return "italic";
+          return null;
         }
 
-        // Updated strikethrough handling
         if (stream.match("~~")) {
           state.strikethrough = !state.strikethrough;
-          return "strikethrough";
+          return null;
         }
 
         stream.next();
-        return state.italic
+        return state.italic && state.bold
+          ? "italic bold"
+          : state.italic && state.underline
+          ? "italic underline"
+          : state.italic
           ? "italic"
           : state.bold
           ? "bold"

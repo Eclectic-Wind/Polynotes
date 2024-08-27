@@ -200,7 +200,7 @@ class WindowManager {
     noteWindow.setMenu(null);
     noteWindow.loadFile(path.join(__dirname, "notes/note.html"));
 
-    noteWindow.webContents.openDevTools({ mode: "detach" });
+    //noteWindow.webContents.openDevTools({ mode: "detach" });
 
     noteWindow.once("ready-to-show", () => {
       noteWindow.show();
